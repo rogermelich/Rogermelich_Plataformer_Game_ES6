@@ -1,15 +1,14 @@
-/* globals __DEV__ */
+/* globals */
 import Phaser from 'phaser'
-import Mushroom from '../sprites/Mushroom'
 
 export default class extends Phaser.State {
   init () {}
   preload () {
-    this.stage.backgroundColor = '#EDEEC9'
+    this.game.load.image('background', './assets/images/background.png')
   }
 
   create () {
-    
+    this.game.add.image(0, 0, 'background');
   }
 
   render () {
