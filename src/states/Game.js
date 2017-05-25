@@ -46,10 +46,20 @@ export default class extends Phaser.State {
 
     //Init Player
     this.spawnPlayer()
+    game.physics.arcade.enable(this.player)
+    this.configurePlayer()
+    this.player.checkWorldBounds = true;
+
+    //Config Inputs
+    this.cursor = game.input.keyboard.createCursorKeys()
+    game.input.keyboard.addKeyCapture([Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.RIGHT, Phaser.Keyboard.LEFT]);
+
   }
 
   update (){
+    this.game.physics.arcade.collide(this.player, this.level)
 
+    this.inputs()
   }
 
   addSounds() {
@@ -61,12 +71,48 @@ export default class extends Phaser.State {
   }
 
   loadLevel (data) {
+    this.level = this.game.add.group()
+    this.level.enableBody = true
     //Platforms
-    data.platforms.forEach(this.spawnPlatform, this)
+    data.platforms.forEach(this.spawnPlatform, this, this.level)
+
+    this.level.setAll('body.immovable', true)
+
+  }
+
+  inputs() {
+    if (this.player.body) {
+      if (this.cursor.left.isDown) {
+        this.player.body.velocity.x = -200
+        this.player.frame = 2
+      } else if (this.cursor.right.isDown) {
+        this.player.body.velocity.x = +200
+        this.player.frame = 1
+      } else {
+        this.player.body.velocity.x = 0
+      }
+    }
+
+    if (this.cursor.up.isDown) {
+      this.jumpPlayer();
+    }
   }
 
   spawnPlatform (platform) {
-    this.game.add.sprite(platform.x, platform.y, platform.image)
+    this.plataforms = game.add.sprite(platform.x, platform.y, platform.image, 0, this.level)
+    // physics for platform sprites
+    // this.game.physics.enable(this.game)
+    //this.sprite.body.allowGravity = false
+    //this.sprite.body.immovable = true
+  }
+
+  configurePlayer() {
+    this.player.body.gravity.y= 1200
+    this.player.body.setSize(20,20,20,20);
+
+    // this.player.animations.add('idle',[3,4,5,4],5,true)
+
+    // this.player.animations.play('idle')
   }
 
   spawnPlayer (data) {
@@ -77,8 +123,17 @@ export default class extends Phaser.State {
       // this.player.reset(380, 101);
       // this.playerIsDead=false;
     // } else {
-      this.player = this.game.add.sprite(0.5,500,'player')
+      this.player = this.game.add.sprite(0.5,450,'player')
     // }
+  }
+
+  jumpPlayer() {
+      this.player.body.velocity.y = -220
+
+      if (!this.hasJumped) {
+          this.jumpSound.play()
+          this.hasJumped = true
+      }
   }
 
   render () {
