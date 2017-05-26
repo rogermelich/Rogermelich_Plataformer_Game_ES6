@@ -188,6 +188,7 @@ export default class extends Phaser.State {
     // Jump!
     if (this.jumps > 0 && this.upInputIsActive(5)) {
         this.player.body.velocity.y = this.JUMP_SPEED;
+        this.jumpSound.play()
         this.jumping = true;
     }
 
