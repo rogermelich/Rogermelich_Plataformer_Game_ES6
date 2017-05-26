@@ -37,31 +37,63 @@ export default class extends Phaser.State {
     this.game.physics.startSystem(Phaser.Physics.ARCADE)
     this.game.physics.setBoundsToWorld()
 
-    // Load Level and
+    // Load Level and Background
     this.game.add.image(0, 0, 'background')
-    this.loadLevel(this.game.cache.getJSON('level:1'));
+    this.loadLevel(this.game.cache.getJSON('level:1'))
+
+    //Collectibles
+    // this.putCoinsOnLevel()
 
     //Load Sounds
     this.addSounds()
 
     //Init Player
+    this.MAX_SPEED = 300; // pixels/second
+    this.ACCELERATION = 1000; // pixels/second/second
+    this.DRAG = 300; // pixels/second
+    this.GRAVITY = 1200; // pixels/second/second
+    this.JUMP_SPEED = -420; // pixels/second (negative y is up)
     this.spawnPlayer()
-    game.physics.arcade.enable(this.player)
     this.configurePlayer()
-    this.player.checkWorldBounds = true;
+    this.jumpin = false;
+
+    // Set player minimum and maximum movement speed
+    this.player.body.maxVelocity.setTo(this.MAX_SPEED, this.MAX_SPEED * 10) // x, y
+
+    this.player.body.drag.setTo(this.DRAG, 0); // x, y
+    // Player
 
     //Config Inputs
     this.cursor = game.input.keyboard.createCursorKeys()
-    game.input.keyboard.addKeyCapture([Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.RIGHT, Phaser.Keyboard.LEFT]);
+    game.input.keyboard.addKeyCapture([Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.RIGHT, Phaser.Keyboard.LEFT])
 
+    this.drawHeightMarkers();
   }
 
-  update (){
+  // This function draws horizontal lines across the stage
+  drawHeightMarkers (y) {
+    // Create a bitmap the same size as the stage
+    var bitmap = this.game.add.bitmapData(this.game.width, this.game.height);
+
+    // These functions use the canvas context to draw lines using the canvas API
+    for(y = this.game.height-32; y >= 64; y -= 32) {
+        bitmap.context.beginPath();
+        bitmap.context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        bitmap.context.moveTo(0, y);
+        bitmap.context.lineTo(this.game.width, y);
+        bitmap.context.stroke();
+    }
+
+    this.game.add.image(0, 0, bitmap)
+  }
+
+  update () {
     this.game.physics.arcade.collide(this.player, this.level)
+
+    //this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this)
 
     this.inputs()
   }
-
   addSounds() {
     this.jumpSound = this.game.add.audio('jumpSound')
     this.coinSound = this.game.add.audio('coinSound')
@@ -80,23 +112,89 @@ export default class extends Phaser.State {
 
   }
 
-  inputs() {
-    if (this.player.body) {
-      if (this.cursor.left.isDown) {
-        this.player.body.velocity.x = -200
-      } else if (this.cursor.right.isDown) {
-        // this.player.animations.add('right',[1,2,3,1,2,3,1,2,3])
-        // this.player.animations.play('right',1,true)
-        this.player.body.velocity.x = +200
+  // Individual Keys inputs
 
-        // this.player.frame = 1
-      } else {
-        this.player.body.velocity.x = 0
-      }
+  // This function should return true when the player activates the "go left" control
+  // In this case, either holding the right arrow or tapping or clicking on the left
+  // side of the screen.
+  leftInputIsActive () {
+      var isActive = false;
+
+      isActive = this.input.keyboard.isDown(Phaser.Keyboard.LEFT);
+      isActive |= (this.game.input.activePointer.isDown &&
+          this.game.input.activePointer.x < this.game.width/4);
+
+      return isActive;
+  }
+
+  // This function should return true when the player activates the "go right" control
+  // In this case, either holding the right arrow or tapping or clicking on the right
+  // side of the screen.
+  rightInputIsActive () {
+      var isActive = false;
+
+      isActive = this.input.keyboard.isDown(Phaser.Keyboard.RIGHT);
+      isActive |= (this.game.input.activePointer.isDown &&
+          this.game.input.activePointer.x > this.game.width/2 + this.game.width/4);
+
+      return isActive;
+  }
+
+  // This function should return true when the player activates the "jump" control
+  // In this case, either holding the up arrow or tapping or clicking on the center
+  // part of the screen.
+  upInputIsActive (duration) {
+      var isActive = false;
+
+      isActive = this.input.keyboard.downDuration(Phaser.Keyboard.UP, duration);
+      isActive |= (this.game.input.activePointer.justPressed(duration + 1000/60) &&
+          this.game.input.activePointer.x > this.game.width/4 &&
+          this.game.input.activePointer.x < this.game.width/2 + this.game.width/4);
+
+      return isActive;
+  }
+
+  // This function returns true when the player releases the "jump" control
+  upInputReleased () {
+      var released = false;
+
+      released = this.input.keyboard.upDuration(Phaser.Keyboard.UP);
+      released |= this.game.input.activePointer.justReleased();
+
+      return released;
+  }
+  // Individual Keys inputs
+
+  inputs() {
+    if (this.leftInputIsActive()) {
+        // If the LEFT key is down, set the player velocity to move left
+        this.player.body.acceleration.x = -this.ACCELERATION;
+    } else if (this.rightInputIsActive()) {
+        // If the RIGHT key is down, set the player velocity to move right
+        this.player.body.acceleration.x = this.ACCELERATION;
+    } else {
+        this.player.body.acceleration.x = 0;
     }
 
-    if (this.cursor.up.isDown) {
-      this.jumpPlayer();
+    // Set a variable that is true when the player is touching the ground
+    var onTheGround = this.player.body.touching.down;
+
+    // If the player is touching the ground, let him have 2 jumps
+    if (onTheGround) {
+        this.jumps = 2;
+        this.jumping = false;
+    }
+
+    // Jump!
+    if (this.jumps > 0 && this.upInputIsActive(5)) {
+        this.player.body.velocity.y = this.JUMP_SPEED;
+        this.jumping = true;
+    }
+
+    // Reduce the number of available jumps if the jump input is released
+    if (this.jumping && this.upInputReleased()) {
+        this.jumps--;
+        this.jumping = false;
     }
 
   }
@@ -118,7 +216,12 @@ export default class extends Phaser.State {
     this.player.animations.play('idle')
   }
 
-  spawnPlayer (data) {
+  spawnPlayer () {
+
+    this.player = this.game.add.sprite(0.5, 450, 'player')
+    this.game.physics.arcade.enable(this.player)
+
+
     // Spawn Player
     // if(this.playerIsDead) {
       //this.player.x= 380
@@ -126,18 +229,29 @@ export default class extends Phaser.State {
       // this.player.reset(380, 101);
       // this.playerIsDead=false;
     // } else {
-      this.player = this.game.add.sprite(0.5,450,'player')
+      //this.player = this.game.add.sprite(0.5,450,'player')
     // }
+
+    this.player.body.collideWorldBounds=true;
   }
 
-  jumpPlayer() {
-      this.player.body.velocity.y = -220
+  // putCoinsOnLevel() {
+  //   this.coins = game.add.group()
+  //   game.add.sprite(100, 450, 'coin')
+  //
+  //   coin.animations.add('rotate',[0,1,2,1],6,true) // 6fps, looped
+  //   coin.animations.play('rotate')
+  //
+  //   this.coins.enableBody = true
+  //   game.physics.arcade.enable(this.coins)
+  // }
+  //
+  // takeCoin(player,coin) {
+  //   coin.body.enable = false
+  //   game.add.tween(coin).to({width:0},100).start()
+  //   this.coinSound.play()
+  // }
 
-      if (!this.hasJumped) {
-          this.jumpSound.play()
-          this.hasJumped = true
-      }
-  }
 
   render () {
     // if (__DEV__) {
