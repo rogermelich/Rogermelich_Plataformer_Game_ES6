@@ -84,10 +84,12 @@ export default class extends Phaser.State {
     if (this.player.body) {
       if (this.cursor.left.isDown) {
         this.player.body.velocity.x = -200
-        this.player.frame = 2
       } else if (this.cursor.right.isDown) {
+        // this.player.animations.add('right',[1,2,3,1,2,3,1,2,3])
+        // this.player.animations.play('right',1,true)
         this.player.body.velocity.x = +200
-        this.player.frame = 1
+
+        // this.player.frame = 1
       } else {
         this.player.body.velocity.x = 0
       }
@@ -96,6 +98,7 @@ export default class extends Phaser.State {
     if (this.cursor.up.isDown) {
       this.jumpPlayer();
     }
+
   }
 
   spawnPlatform (platform) {
@@ -107,12 +110,12 @@ export default class extends Phaser.State {
   }
 
   configurePlayer() {
-    this.player.body.gravity.y= 1200
-    this.player.body.setSize(20,20,20,20);
+    this.player.body.gravity.y= 1200;
+    this.player.body.setSize(40,40,0,0)
 
-    // this.player.animations.add('idle',[3,4,5,4],5,true)
+    this.player.animations.add('idle',[3,4,5,4],5,true)
 
-    // this.player.animations.play('idle')
+    this.player.animations.play('idle')
   }
 
   spawnPlayer (data) {
