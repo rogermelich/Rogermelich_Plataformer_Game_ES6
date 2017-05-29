@@ -42,7 +42,7 @@ export default class extends Phaser.State {
     this.loadLevel(this.game.cache.getJSON('level:1'))
 
     //Collectibles
-    // this.putCoinsOnLevel()
+    this.putCoinsOnLevel(this.game.cache.getJSON('level:1'))
 
     //Load Sounds
     this.addSounds()
@@ -90,7 +90,7 @@ export default class extends Phaser.State {
   update () {
     this.game.physics.arcade.collide(this.player, this.level)
 
-    //this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this)
+      this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this)
 
     this.inputs()
   }
@@ -105,11 +105,12 @@ export default class extends Phaser.State {
   loadLevel (data) {
     this.level = this.game.add.group()
     this.level.enableBody = true
+
     //Platforms
     data.platforms.forEach(this.spawnPlatform, this, this.level)
 
-    this.level.setAll('body.immovable', true)
 
+    this.level.setAll('body.immovable', true)
   }
 
   // Individual Keys inputs
@@ -201,7 +202,7 @@ export default class extends Phaser.State {
   }
 
   spawnPlatform (platform) {
-    this.plataforms = game.add.sprite(platform.x, platform.y, platform.image, 0, this.level)
+    this.platforms = game.add.sprite(platform.x, platform.y, platform.image, 0, this.level)
     // physics for platform sprites
     // this.game.physics.enable(this.game)
     //this.sprite.body.allowGravity = false
@@ -236,22 +237,29 @@ export default class extends Phaser.State {
     this.player.body.collideWorldBounds=true;
   }
 
-  // putCoinsOnLevel() {
-  //   this.coins = game.add.group()
-  //   game.add.sprite(100, 450, 'coin')
-  //
-  //   coin.animations.add('rotate',[0,1,2,1],6,true) // 6fps, looped
-  //   coin.animations.play('rotate')
-  //
-  //   this.coins.enableBody = true
-  //   game.physics.arcade.enable(this.coins)
-  // }
-  //
-  // takeCoin(player,coin) {
-  //   coin.body.enable = false
-  //   game.add.tween(coin).to({width:0},100).start()
-  //   this.coinSound.play()
-  // }
+  spawnCoins (coin) {
+    this.money = game.add.sprite(coin.x, coin.y, 'coin', 0, this.coins)
+
+    this.money.animations.add('coinanim',[0,1,2,3], 3, true)
+    this.money.animations.play('coinanim')
+  }
+
+  putCoinsOnLevel(data) {
+    this.coins = this.game.add.group()
+    this.coins.enableBody = true
+
+    //coins
+    data.coins.forEach(this.spawnCoins, this, this.coins)
+
+    game.physics.arcade.enable(this.coins)
+
+  }
+
+  takeCoin(player,coin) {
+    coin.body.enable = false
+    game.add.tween(coin).to({width:0},100).start()
+    this.coinSound.play()
+  }
 
 
   render () {
