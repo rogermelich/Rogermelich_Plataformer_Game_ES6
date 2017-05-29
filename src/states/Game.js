@@ -53,6 +53,8 @@ export default class extends Phaser.State {
     this.DRAG = 300; // pixels/second
     this.GRAVITY = 1200; // pixels/second/second
     this.JUMP_SPEED = -420; // pixels/second (negative y is up)
+    this.LIVES = 3;
+    this.COINS = 0;
     this.spawnPlayer()
     this.configurePlayer()
     this.jumpin = false;
@@ -62,6 +64,11 @@ export default class extends Phaser.State {
 
     this.player.body.drag.setTo(this.DRAG, 0); // x, y
     // Player
+
+    //Score Count
+    this.score = 0;
+    this.scoreText = this.game.add.text(16, 16, 'Score: 0', { fontSize: '19px', fill: '#000' });
+    // this.scoreText.fixedToCamera = true;
 
     //Config Inputs
     this.cursor = game.input.keyboard.createCursorKeys()
@@ -259,6 +266,10 @@ export default class extends Phaser.State {
     coin.body.enable = false
     game.add.tween(coin).to({width:0},100).start()
     this.coinSound.play()
+
+    //Valor Of Coins
+    this.score += 5;
+    this.scoreText.text = 'Score: ' + this.score;
   }
 
 
