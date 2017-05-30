@@ -40,7 +40,7 @@ export default class extends Phaser.State {
 
   setParticles(x, y) {
       this.explosion = game.add.emitter(0, 0, 20);
-      this.explosion.makeParticles('muzzleflash2');
+      this.explosion.makeParticles(['muzzleflash2', 'smoke-puff']);
       this.explosion.setYSpeed(-450, 250);
       this.explosion.setXSpeed(-450, 250);
       this.explosion.gravity = 150;
@@ -299,10 +299,17 @@ export default class extends Phaser.State {
     }
     //-1 Live
     this.LIVES--
-    this.glives.removeChildAt(this.LIVES)
+    console.log(this.LIVES)
+    if (this.LIVES === 0){
+      this.state.start('GameOver')
+      console.log('Game Over')
+    }
 
+    console.log(this.LIVES)
+    this.glives.removeChildAt(this.LIVES)
     //Reset Player
     this.spawnPlayer()
+
   }
 
   playerLives() {

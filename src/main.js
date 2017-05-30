@@ -4,6 +4,7 @@ import Phaser from 'phaser'
 
 import SplashState from './states/Splash'
 import GameState from './states/Game'
+import GameOverState from './states/GameOver'
 
 import config from './config'
 
@@ -16,6 +17,7 @@ class Game extends Phaser.Game {
     super(width, height, Phaser.CANVAS, 'content', null)
 
     this.state.add('Splash', SplashState, false)
+    this.state.add('GameOver', GameOverState, false)
     this.state.add('Game', GameState, false)
 
     this.state.start('Game')
