@@ -4,17 +4,22 @@ import Phaser from 'phaser'
 export default class extends Phaser.State {
   init () {}
   preload () {
+    // Load Levels
     this.game.load.json('level:0', './assets/levels/level00.json');
     this.game.load.json('level:1', './assets/levels/level01.json');
 
-
+    // Load Images
     this.game.load.image('background', './assets/images/background.png')
     this.game.load.image('ground', './assets/images/ground.png')
-    this.game.load.image('grass:8x1', './assets/images/grass_8x1.png');
-    this.game.load.image('grass:6x1', './assets/images/grass_6x1.png');
-    this.game.load.image('grass:4x1', './assets/images/grass_4x1.png');
-    this.game.load.image('grass:2x1', './assets/images/grass_2x1.png');
-    this.game.load.image('grass:1x1', './assets/images/grass_1x1.png');
+    this.game.load.image('grass:8x1', './assets/images/grass_8x1.png')
+    this.game.load.image('grass:6x1', './assets/images/grass_6x1.png')
+    this.game.load.image('grass:4x1', './assets/images/grass_4x1.png')
+    this.game.load.image('grass:2x1', './assets/images/grass_2x1.png')
+    this.game.load.image('grass:1x1', './assets/images/grass_1x1.png')
+    // Load Particles
+    this.game.load.image('muzzleflash2', './assets/images/particles/muzzleflash2.png')
+    this.game.load.image('smoke-puff', './assets/images/particles/smoke-puff.png')
+
 
     // Load Spritesheets
     this.game.load.spritesheet('coin', './assets/images/coin_animated.png', 22, 22);
@@ -32,20 +37,39 @@ export default class extends Phaser.State {
     this.game.load.audio('doorSound', './assets/audio/door.wav');
   }
 
+  setParticles(x, y) {
+      this.explosion = game.add.emitter(0, 0, 20);
+      this.explosion.makeParticles('muzzleflash2');
+      this.explosion.setYSpeed(-450, 250);
+      this.explosion.setXSpeed(-450, 250);
+      this.explosion.gravity = 150;
+  }
+
   create () {
     // Select Physics
     this.game.physics.startSystem(Phaser.Physics.ARCADE)
     this.game.physics.setBoundsToWorld()
 
+    //Level
+    this.LEVEL = this.game.cache.getJSON('level:1')
+
+    //Initial states
+    this.playerIsDead=false;
+
     // Load Level and Background
     this.game.add.image(0, 0, 'background')
-    this.loadLevel(this.game.cache.getJSON('level:1'))
+    this.loadLevel(this.LEVEL)
+    this.levelText = this.game.add.text(16, 50, 'Level 1', { fontSize: '16px', fill: '#000' });
+    // this.levelText.fixedToCamera = true;
 
     //Collectibles
-    this.putCoinsOnLevel(this.game.cache.getJSON('level:1'))
+    this.putCoinsOnLevel(this.LEVEL)
 
     //Load Sounds
     this.addSounds()
+
+    //Load Particles
+    this.setParticles()
 
     //Init Player
     this.MAX_SPEED = 300; // pixels/second
@@ -69,6 +93,9 @@ export default class extends Phaser.State {
     this.score = 0;
     this.scoreText = this.game.add.text(16, 16, 'Score: 0', { fontSize: '19px', fill: '#000' });
     // this.scoreText.fixedToCamera = true;
+
+    //Spiders
+    this.loadEnemy(this.LEVEL)
 
     //Config Inputs
     this.cursor = game.input.keyboard.createCursorKeys()
@@ -97,9 +124,14 @@ export default class extends Phaser.State {
   update () {
     this.game.physics.arcade.collide(this.player, this.level)
 
-      this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this)
+    this.game.physics.arcade.overlap(this.player, this.spiders, this.dead, null, this)
+    this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this)
 
     this.inputs()
+
+    // this.explosion.forEach(function(p){
+    //   p.alpha = game.math.clamp(p.lifespan / 100, 0, 1);
+    // }, this);
   }
   addSounds() {
     this.jumpSound = this.game.add.audio('jumpSound')
@@ -210,10 +242,6 @@ export default class extends Phaser.State {
 
   spawnPlatform (platform) {
     this.platforms = game.add.sprite(platform.x, platform.y, platform.image, 0, this.level)
-    // physics for platform sprites
-    // this.game.physics.enable(this.game)
-    //this.sprite.body.allowGravity = false
-    //this.sprite.body.immovable = true
   }
 
   configurePlayer() {
@@ -225,23 +253,48 @@ export default class extends Phaser.State {
     this.player.animations.play('idle')
   }
 
-  spawnPlayer () {
-
-    this.player = this.game.add.sprite(0.5, 450, 'player')
+  spawnPlayer (x, y) {
+    if(this.playerIsDead) {
+        //this.player.x= 380
+        //this.player.y= 101
+        this.player.reset(0.5, 450)
+        this.playerIsDead=false
+      } else {
+        this.player = this.game.add.sprite(0.5, 450, 'player')
+      }
     this.game.physics.arcade.enable(this.player)
-
-
-    // Spawn Player
-    // if(this.playerIsDead) {
-      //this.player.x= 380
-      //this.player.y= 101
-      // this.player.reset(380, 101);
-      // this.playerIsDead=false;
-    // } else {
-      //this.player = this.game.add.sprite(0.5,450,'player')
-    // }
-
     this.player.body.collideWorldBounds=true;
+  }
+
+  spawnEnemies (enemy) {
+    this.enemy = game.add.sprite(enemy.x, enemy.y, 'spider', 0, this.spiders)
+
+    this.enemy.animations.add('enemyanim',[0,1,2], 8, true)
+    this.enemy.animations.play('enemyanim')
+  }
+
+  loadEnemy (data) {
+    this.spiders = this.game.add.group()
+    this.spiders.enableBody = true
+
+    //spiders
+    data.spiders.forEach(this.spawnEnemies, this, this.spiders)
+
+    game.physics.arcade.enable(this.spiders)
+  }
+
+  dead() {
+    this.playerIsDead = true
+    this.stompSound.play()
+    game.camera.shake(0.05, 200)
+
+    if (this.playerIsDead) {
+      this.explosion.x = this.player.x
+      this.explosion.y = this.player.y+10
+      this.explosion.start(true,300,null,20)
+    }
+    //Reset Player
+    this.spawnPlayer()
   }
 
   spawnCoins (coin) {
@@ -267,7 +320,7 @@ export default class extends Phaser.State {
     game.add.tween(coin).to({width:0},100).start()
     this.coinSound.play()
 
-    //Valor Of Coins
+    //Valor Of Score
     this.score += 5;
     this.scoreText.text = 'Score: ' + this.score;
   }
