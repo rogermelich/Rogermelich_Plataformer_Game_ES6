@@ -16,6 +16,7 @@ export default class extends Phaser.State {
     this.game.load.image('grass:4x1', './assets/images/grass_4x1.png')
     this.game.load.image('grass:2x1', './assets/images/grass_2x1.png')
     this.game.load.image('grass:1x1', './assets/images/grass_1x1.png')
+    this.game.load.image('heart', './assets/images/heart.png')
     // Load Particles
     this.game.load.image('muzzleflash2', './assets/images/particles/muzzleflash2.png')
     this.game.load.image('smoke-puff', './assets/images/particles/smoke-puff.png')
@@ -59,7 +60,7 @@ export default class extends Phaser.State {
     // Load Level and Background
     this.game.add.image(0, 0, 'background')
     this.loadLevel(this.LEVEL)
-    this.levelText = this.game.add.text(16, 50, 'Level 1', { fontSize: '16px', fill: '#000' });
+    this.levelText = this.game.add.text(16, 80, 'Level 1', { fontSize: '16px', fill: '#000' });
     // this.levelText.fixedToCamera = true;
 
     //Collectibles
@@ -93,6 +94,9 @@ export default class extends Phaser.State {
     this.score = 0;
     this.scoreText = this.game.add.text(16, 16, 'Score: 0', { fontSize: '19px', fill: '#000' });
     // this.scoreText.fixedToCamera = true;
+
+    //Lives
+    this.playerLives()
 
     //Spiders
     this.loadEnemy(this.LEVEL)
@@ -293,8 +297,26 @@ export default class extends Phaser.State {
       this.explosion.y = this.player.y+10
       this.explosion.start(true,300,null,20)
     }
+    //-1 Live
+    this.LIVES--
+    this.glives.removeChildAt(this.LIVES)
+
     //Reset Player
     this.spawnPlayer()
+  }
+
+  playerLives() {
+    this.playerIsDead = false
+    this.glives = game.add.group()
+    this.livesText = this.game.add.text(16, 45, 'Lives: ', { fontSize: '19px ', fill: '#000' })
+    for (var i = 0; i < 3; i++) {
+            this.forlives = this.glives.create(90 + (30 * i), 55, 'heart')
+            this.forlives.anchor.setTo(0.5, 0.5)
+    }
+
+    // this.livesText.fixedToCamera = true
+    // this.gLives.fixedToCamera = true
+
   }
 
   spawnCoins (coin) {
