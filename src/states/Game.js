@@ -17,25 +17,27 @@ export default class extends Phaser.State {
     this.game.load.image('grass:2x1', './assets/images/grass_2x1.png')
     this.game.load.image('grass:1x1', './assets/images/grass_1x1.png')
     this.game.load.image('heart', './assets/images/heart.png')
+
     // Load Particles
     this.game.load.image('muzzleflash2', './assets/images/particles/muzzleflash2.png')
     this.game.load.image('smoke-puff', './assets/images/particles/smoke-puff.png')
 
 
     // Load Spritesheets
-    this.game.load.spritesheet('coin', './assets/images/coin_animated.png', 22, 22);
-    this.game.load.spritesheet('spider', './assets/images/spider.png', 42, 32);
-    this.game.load.spritesheet('player', './assets/images/player.png', 36, 42);
-    this.game.load.spritesheet('door', './assets/images/door.png', 42, 66);
-    this.game.load.spritesheet('keyIcon', './assets/images/key_icon.png', 34, 30);
+    this.game.load.spritesheet('coin', './assets/images/coin_animated.png', 22, 22)
+    this.game.load.spritesheet('spider', './assets/images/spider.png', 42, 32)
+    this.game.load.spritesheet('player', './assets/images/player.png', 36, 42)
+    this.game.load.spritesheet('door', './assets/images/door.png', 42, 66)
+    this.game.load.spritesheet('keyIcon', './assets/images/key_icon.png', 34, 30)
 
 
     // audio
-    this.game.load.audio('jumpSound', './assets/audio/jump.wav');
-    this.game.load.audio('coinSound', './assets/audio/coin.wav');
-    this.game.load.audio('stompSound', './assets/audio/stomp.wav');
-    this.game.load.audio('keySound', './assets/audio/key.wav');
-    this.game.load.audio('doorSound', './assets/audio/door.wav');
+    this.game.load.audio('jumpSound', './assets/audio/jump.wav')
+    this.game.load.audio('coinSound', './assets/audio/coin.wav')
+    this.game.load.audio('stompSound', './assets/audio/stomp.wav')
+    this.game.load.audio('keySound', './assets/audio/key.wav')
+    this.game.load.audio('doorSound', './assets/audio/door.wav')
+    this.game.load.audio('explosion', './assets/audio/explosion.mp3')
   }
 
   setParticles(x, y) {
@@ -58,10 +60,13 @@ export default class extends Phaser.State {
     this.playerIsDead=false;
 
     // Load Level and Background
-    this.game.add.image(0, 0, 'background')
+    // this.game.add.image(0, 0, 'background')
+    this.game.add.tileSprite(0, 0, 1500, 600, 'background');
+    this.game.world.setBounds(0, 0, 1500, 600)
+
     this.loadLevel(this.LEVEL)
     this.levelText = this.game.add.text(16, 80, 'Level 1', { fontSize: '16px', fill: '#000' });
-    // this.levelText.fixedToCamera = true;
+    this.levelText.fixedToCamera = true;
 
     //Collectibles
     this.putCoinsOnLevel(this.LEVEL)
@@ -93,7 +98,7 @@ export default class extends Phaser.State {
     //Score Count
     this.score = 0;
     this.scoreText = this.game.add.text(16, 16, 'Score: 0', { fontSize: '19px', fill: '#000' });
-    // this.scoreText.fixedToCamera = true;
+    this.scoreText.fixedToCamera = true;
 
     //Lives
     this.playerLives()
@@ -106,6 +111,8 @@ export default class extends Phaser.State {
     game.input.keyboard.addKeyCapture([Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.RIGHT, Phaser.Keyboard.LEFT])
 
     this.drawHeightMarkers();
+
+    this.game.camera.follow(this.player)
   }
 
   // This function draws horizontal lines across the stage
@@ -133,9 +140,7 @@ export default class extends Phaser.State {
 
     this.inputs()
 
-    // this.explosion.forEach(function(p){
-    //   p.alpha = game.math.clamp(p.lifespan / 100, 0, 1);
-    // }, this);
+    this.enemyMove()
   }
   addSounds() {
     this.jumpSound = this.game.add.audio('jumpSound')
@@ -143,6 +148,7 @@ export default class extends Phaser.State {
     this.stompSound = this.game.add.audio('stompSound')
     this.keySound = this.game.add.audio('keySound')
     this.doorSound = this.game.add.audio('doorSound')
+    this.explosionSound = this.game.add.audio('explosion')
   }
 
   loadLevel (data) {
@@ -257,7 +263,7 @@ export default class extends Phaser.State {
     this.player.animations.play('idle')
   }
 
-  spawnPlayer (x, y) {
+  spawnPlayer () {
     if(this.playerIsDead) {
         //this.player.x= 380
         //this.player.y= 101
@@ -270,26 +276,41 @@ export default class extends Phaser.State {
     this.player.body.collideWorldBounds=true;
   }
 
-  spawnEnemies (enemy) {
-    this.enemy = game.add.sprite(enemy.x, enemy.y, 'spider', 0, this.spiders)
-
-    this.enemy.animations.add('enemyanim',[0,1,2], 8, true)
-    this.enemy.animations.play('enemyanim')
-  }
-
-  loadEnemy (data) {
+  loadEnemy () {
     this.spiders = this.game.add.group()
     this.spiders.enableBody = true
 
-    //spiders
-    data.spiders.forEach(this.spawnEnemies, this, this.spiders)
+    this.spider1 = this.spiders.create(121, 399, 'spider')
+    this.spider2 = this.spiders.create(800, 362, 'spider')
+    this.spider3 = this.spiders.create(500, 147, 'spider')
 
-    game.physics.arcade.enable(this.spiders)
+    this.spider1.body.velocity.x = 100
+    this.spider2.body.velocity.x = 100
+    this.spider3.body.velocity.x = 100
+
+    this.spider1.animations.add('spider1',[0,1,2], 12, true)
+    this.spider1.animations.play('spider1')
+
+    this.spider2.animations.add('spider2',[0,1,2], 12, true)
+    this.spider2.animations.play('spider2')
+
+    this.spider3.animations.add('spider3',[0,1,2], 12, true)
+    this.spider3.animations.play('spider3')
+
+  }
+
+  enemyMove () {
+    if (parseInt(this.spider1.body.x) > 280 ) { this.spider1.body.velocity.x = -100 }
+    if (parseInt(this.spider1.body.x) < 1 ) { this.spider1.body.velocity.x = 100 }
+    if (parseInt(this.spider2.body.x) > 960 ) { this.spider2.body.velocity.x = -100 }
+    if (parseInt(this.spider2.body.x) < 668 ) { this.spider2.body.velocity.x = 100 }
+    if (parseInt(this.spider3.body.x) > 675) { this.spider3.body.velocity.x = -100 }
+    if (parseInt(this.spider3.body.x) < 475 ) { this.spider3.body.velocity.x = 100 }
   }
 
   dead() {
     this.playerIsDead = true
-    this.stompSound.play()
+    this.explosionSound.play()
     game.camera.shake(0.05, 200)
 
     if (this.playerIsDead) {
@@ -299,17 +320,13 @@ export default class extends Phaser.State {
     }
     //-1 Live
     this.LIVES--
-    console.log(this.LIVES)
     if (this.LIVES === 0){
       this.state.start('GameOver')
-      console.log('Game Over')
     }
-
-    console.log(this.LIVES)
     this.glives.removeChildAt(this.LIVES)
+
     //Reset Player
     this.spawnPlayer()
-
   }
 
   playerLives() {
@@ -321,15 +338,15 @@ export default class extends Phaser.State {
             this.forlives.anchor.setTo(0.5, 0.5)
     }
 
-    // this.livesText.fixedToCamera = true
-    // this.gLives.fixedToCamera = true
+    this.livesText.fixedToCamera = true
+    this.glives.fixedToCamera = true
 
   }
 
   spawnCoins (coin) {
     this.money = game.add.sprite(coin.x, coin.y, 'coin', 0, this.coins)
 
-    this.money.animations.add('coinanim',[0,1,2,3], 3, true)
+    this.money.animations.add('coinanim',[0,1,2,3], 6, true)
     this.money.animations.play('coinanim')
   }
 
@@ -356,6 +373,7 @@ export default class extends Phaser.State {
 
 
   render () {
+    game.debug.spriteInfo(this.player, 32, 32);
     // if (__DEV__) {
     //   this.game.debug.spriteInfo(this.mushroom, 32, 32)
     // }
