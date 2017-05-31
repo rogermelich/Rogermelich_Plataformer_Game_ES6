@@ -2,11 +2,14 @@
 import Phaser from 'phaser'
 
 export default class extends Phaser.State {
-  init () {}
+  init () {
+    this.hasKey = false
+    this.stage = 1
+  }
   preload () {
     // Load Levels
-    this.game.load.json('level:0', './assets/levels/level00.json');
-    this.game.load.json('level:1', './assets/levels/level01.json');
+    this.game.load.json('level:1', './assets/levels/level01.json')
+    this.game.load.json('level:2', './assets/levels/level02.json')
 
     // Load Images
     this.game.load.image('background', './assets/images/background.png')
@@ -34,7 +37,6 @@ export default class extends Phaser.State {
     // audio
     this.game.load.audio('jumpSound', './assets/audio/jump.wav')
     this.game.load.audio('coinSound', './assets/audio/coin.wav')
-    this.game.load.audio('stompSound', './assets/audio/stomp.wav')
     this.game.load.audio('keySound', './assets/audio/key.wav')
     this.game.load.audio('doorSound', './assets/audio/door.wav')
     this.game.load.audio('explosion', './assets/audio/explosion.mp3')
@@ -54,7 +56,9 @@ export default class extends Phaser.State {
     this.game.physics.setBoundsToWorld()
 
     //Level
-    this.LEVEL = this.game.cache.getJSON('level:1')
+    // this.stage++
+    console.log(this.stage)
+    this.LEVEL = this.game.cache.getJSON(`level:${this.stage}`)
 
     //Initial states
     this.playerIsDead=false;
@@ -103,6 +107,9 @@ export default class extends Phaser.State {
     //Lives
     this.playerLives()
 
+    //Key
+    this.playerKey(this.player, this.hasKey)
+
     //Spiders
     this.loadEnemy(this.LEVEL)
 
@@ -137,21 +144,30 @@ export default class extends Phaser.State {
 
     this.game.physics.arcade.overlap(this.player, this.spiders, this.dead, null, this)
     this.game.physics.arcade.overlap(this.player, this.coins, this.takeCoin, null, this)
+    this.game.physics.arcade.overlap(this.player, this.key, this.takeKey,null, this)
+    this.game.physics.arcade.overlap(this.player, this.door, this.openDoor,
+    // ignore if there is no key or the player is on air
+    function (player, door) {
+        return this.hasKey && this.player.body.touching.down;
+    }, this);
 
     this.inputs()
 
     this.enemyMove()
+
+    // this.playerKey(this.player, this.hasKey)
+
   }
   addSounds() {
     this.jumpSound = this.game.add.audio('jumpSound')
     this.coinSound = this.game.add.audio('coinSound')
-    this.stompSound = this.game.add.audio('stompSound')
     this.keySound = this.game.add.audio('keySound')
     this.doorSound = this.game.add.audio('doorSound')
     this.explosionSound = this.game.add.audio('explosion')
   }
 
   loadLevel (data) {
+    this.bgDecoration = this.game.add.group()
     this.level = this.game.add.group()
     this.level.enableBody = true
 
@@ -160,6 +176,31 @@ export default class extends Phaser.State {
 
 
     this.level.setAll('body.immovable', true)
+
+    this.spawnDoor(data.door.x, data.door.y);
+    this.spawnKey(data.key.x, data.key.y);
+  }
+
+  spawnDoor (x, y) {
+    this.door = this.bgDecoration.create(x, y, 'door');
+    this.door.anchor.setTo(0.5, 1);
+    this.game.physics.enable(this.door);
+    this.door.body.allowGravity = false;
+  }
+
+  spawnKey (x, y) {
+    this.key = this.bgDecoration.create(x, y, 'keyIcon');
+    this.key.anchor.set(0.5, 0.5);
+    // enable physics to detect collisions, so the hero can pick the key up
+    this.game.physics.enable(this.key);
+    this.key.body.allowGravity = false;
+    // add a small 'up & down' animation via a tween
+    this.key.y -= 3;
+    this.game.add.tween(this.key)
+        .to({y: this.key.y + 6}, 800, Phaser.Easing.Sinusoidal.InOut)
+        .yoyo(true)
+        .loop()
+        .start()
   }
 
   // Individual Keys inputs
@@ -343,6 +384,17 @@ export default class extends Phaser.State {
 
   }
 
+  playerKey () {
+    this.gkey = game.add.group()
+    if (this.hasKey === true) {
+      this.KeyText = this.game.add.text(16, 110, 'Key: ', { fontSize: '19px ', fill: '#000' })
+      this.keyImage = this.glives.create(70, 102, 'keyIcon')
+
+      this.KeyText.fixedToCamera = true
+      this.gkey.fixedToCamera = true
+    }
+  }
+
   spawnCoins (coin) {
     this.money = game.add.sprite(coin.x, coin.y, 'coin', 0, this.coins)
 
@@ -361,7 +413,7 @@ export default class extends Phaser.State {
 
   }
 
-  takeCoin(player,coin) {
+  takeCoin(player, coin) {
     coin.body.enable = false
     game.add.tween(coin).to({width:0},100).start()
     this.coinSound.play()
@@ -369,6 +421,23 @@ export default class extends Phaser.State {
     //Valor Of Score
     this.score += 5;
     this.scoreText.text = 'Score: ' + this.score;
+  }
+
+  takeKey (player, key) {
+    this.key.body.enable = false
+    this.game.add.tween(key).to({width:0},100).start()
+    this.keySound.play()
+    this.hasKey = true
+  }
+
+  openDoor (hero, door) {
+    if (this.hasKey === true) {
+      this.doorSound.play()
+      this.stage++
+      game.state.restart(false, false, 'Game')
+      // this.LEVEL = this.game.cache.getJSON(`level:${this.stage}`)
+      console.log(this.stage)
+    }
   }
 
 
