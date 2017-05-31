@@ -3,8 +3,13 @@ import Phaser from 'phaser'
 
 export default class extends Phaser.State {
   init () {
-    this.hasKey = false
+    if (this.nextStage === 2) {
+      this.stage = 2
+      this.hasKey = false
+    } else {
     this.stage = 1
+    this.hasKey = false
+    }
   }
   preload () {
     // Load Levels
@@ -56,7 +61,6 @@ export default class extends Phaser.State {
     this.game.physics.setBoundsToWorld()
 
     //Level
-    // this.stage++
     console.log(this.stage)
     this.LEVEL = this.game.cache.getJSON(`level:${this.stage}`)
 
@@ -69,7 +73,7 @@ export default class extends Phaser.State {
     this.game.world.setBounds(0, 0, 1500, 600)
 
     this.loadLevel(this.LEVEL)
-    this.levelText = this.game.add.text(16, 80, 'Level 1', { fontSize: '16px', fill: '#000' });
+    this.levelText = this.game.add.text(16, 80, 'Level ' + this.stage , { fontSize: '16px', fill: '#000' });
     this.levelText.fixedToCamera = true;
 
     //Collectibles
@@ -106,9 +110,6 @@ export default class extends Phaser.State {
 
     //Lives
     this.playerLives()
-
-    //Key
-    this.playerKey(this.player, this.hasKey)
 
     //Spiders
     this.loadEnemy(this.LEVEL)
@@ -155,7 +156,8 @@ export default class extends Phaser.State {
 
     this.enemyMove()
 
-    // this.playerKey(this.player, this.hasKey)
+    //Key
+    this.playerKey()
 
   }
   addSounds() {
@@ -387,10 +389,8 @@ export default class extends Phaser.State {
   playerKey () {
     this.gkey = game.add.group()
     if (this.hasKey === true) {
-      this.KeyText = this.game.add.text(16, 110, 'Key: ', { fontSize: '19px ', fill: '#000' })
-      this.keyImage = this.glives.create(70, 102, 'keyIcon')
+      this.keyImage = this.glives.create(16, 102, 'keyIcon')
 
-      this.KeyText.fixedToCamera = true
       this.gkey.fixedToCamera = true
     }
   }
@@ -430,13 +430,13 @@ export default class extends Phaser.State {
     this.hasKey = true
   }
 
-  openDoor (hero, door) {
+  openDoor (player, door) {
     if (this.hasKey === true) {
       this.doorSound.play()
-      this.stage++
+      this.nextStage = 2
       game.state.restart(false, false, 'Game')
       // this.LEVEL = this.game.cache.getJSON(`level:${this.stage}`)
-      console.log(this.stage)
+      console.log(this.nextStage)
     }
   }
 
