@@ -22,5 +22,6 @@ export default class extends Phaser.State {
   startGame() {
     // Change the state back to Game.
     this.state.start('Game')
+    this.game_overSound.stop()
   }
 }

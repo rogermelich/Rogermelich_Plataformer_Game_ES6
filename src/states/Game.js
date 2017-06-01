@@ -56,6 +56,16 @@ export default class extends Phaser.State {
   }
 
   create () {
+    //Music
+    this.backgroundSound = this.game.add.audio('backgroundMusic')
+    this.backgroundSound.loop = true
+
+    if (window.enableSound) {
+      this.backgroundSound.play()
+    } else {
+      this.backgroundSound.stop()
+    }
+
     // Select Physics
     this.game.physics.startSystem(Phaser.Physics.ARCADE)
     this.game.physics.setBoundsToWorld()
@@ -155,10 +165,6 @@ export default class extends Phaser.State {
     this.inputs()
 
     this.enemyMove()
-
-    //Key
-    this.playerKey()
-
   }
   addSounds() {
     this.jumpSound = this.game.add.audio('jumpSound')
@@ -364,6 +370,7 @@ export default class extends Phaser.State {
     //-1 Live
     this.LIVES--
     if (this.LIVES === 0){
+      this.backgroundSound.stop()
       this.state.start('GameOver')
     }
     this.glives.removeChildAt(this.LIVES)
@@ -428,6 +435,8 @@ export default class extends Phaser.State {
     this.game.add.tween(key).to({width:0},100).start()
     this.keySound.play()
     this.hasKey = true
+
+    this.playerKey()
   }
 
   openDoor (player, door) {

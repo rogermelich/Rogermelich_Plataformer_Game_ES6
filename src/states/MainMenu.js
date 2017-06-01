@@ -47,6 +47,6 @@ export default class extends Phaser.State {
 
   startGame () {
     this.state.start('Game')
-    this.backgroundSound.stop()
+    // this.backgroundSound.stop()
   }
 }
