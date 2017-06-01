@@ -20,10 +20,31 @@ export default class extends Phaser.State {
     this.stateText = game.add.text(320, 250, ' ', { fontSize: '50px', fill: '#fff' })
     this.stateText.text = "Click to start"
 
+    this.stateText = game.add.text(16, 450, ' ', { fontSize: '15px', fill: '#fff' })
+    this.stateText.text = "Press 'P' To Pause Music"
+
+    this.stateText = game.add.text(16, 470, ' ', { fontSize: '15px', fill: '#fff' })
+    this.stateText.text = "Press 'R' To Resume Music"
+
     this.backgroundSound.play()
 
     game.input.onTap.addOnce(this.startGame, this)
   }
+
+  update(){
+    this.musicOptions()
+  }
+
+  musicOptions () {
+    var pauseKey = game.input.keyboard.addKey(Phaser.Keyboard.P)
+    var resumeKey = game.input.keyboard.addKey(Phaser.Keyboard.R)
+    if (pauseKey.justPressed()) {
+        this.backgroundSound.pause()
+    } if (resumeKey.justPressed()) {
+      this.backgroundSound.resume()
+    }
+  }
+
   startGame () {
     this.state.start('Game')
     this.backgroundSound.stop()
