@@ -570,7 +570,6 @@ export default class extends Phaser.State {
 
 
   render () {
-    game.debug.spriteInfo(this.player, 32, 32);
     // if (__DEV__) {
     //   this.game.debug.spriteInfo(this.mushroom, 32, 32)
     // }
