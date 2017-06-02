@@ -7,7 +7,7 @@ export default class extends Phaser.State {
   }
   preload () {
     // Load Levels
-    this.game.load.json('level:1', './assets/levels/level01.json')
+    this.game.load.json('level:2', './assets/levels/level02.json')
 
     // Load Images
     this.game.load.image('background', './assets/images/background.png')
@@ -20,9 +20,12 @@ export default class extends Phaser.State {
     this.game.load.image('heart', './assets/images/heart.png')
     this.game.load.image('bullet', './assets/images/bullet.png')
 
+
     // Load Particles
     this.game.load.image('muzzleflash2', './assets/images/particles/muzzleflash2.png')
     this.game.load.image('smoke-puff', './assets/images/particles/smoke-puff.png')
+    this.game.load.spritesheet('snowflakes', './assets/images/particles/snowflakes.png', 17, 17)
+    this.game.load.spritesheet('snowflakes_large', './assets/images/particles/snowflakes_large.png', 64, 64)
 
 
     // Load Spritesheets
@@ -31,6 +34,7 @@ export default class extends Phaser.State {
     this.game.load.spritesheet('player', './assets/images/player.png', 36, 42)
     this.game.load.spritesheet('door', './assets/images/door.png', 42, 66)
     this.game.load.spritesheet('keyIcon', './assets/images/key_icon.png', 34, 30)
+
 
 
     // audio
@@ -47,6 +51,16 @@ export default class extends Phaser.State {
       this.explosion.setYSpeed(-450, 250);
       this.explosion.setXSpeed(-450, 250);
       this.explosion.gravity = 150;
+
+      //Particles Snow
+      var emitter = game.add.emitter(game.world.centerX, 0, 200);
+      emitter.width = game.world.width;
+      emitter.makeParticles(['snowflakes', 'snowflakes_large']);
+      emitter.minParticleScale = 0.5;
+      emitter.maxParticleScale = 1;
+      emitter.setYSpeed(50, 200);
+      emitter.setXSpeed(-30, 30);
+      emitter.start(false, 3500, 30);
   }
 
   create () {
@@ -65,7 +79,7 @@ export default class extends Phaser.State {
     this.game.physics.setBoundsToWorld()
 
     //Level
-    this.LEVEL = this.game.cache.getJSON('level:1')
+    this.LEVEL = this.game.cache.getJSON('level:2')
 
     //Initial states
     this.playerIsDead=false;
@@ -76,7 +90,7 @@ export default class extends Phaser.State {
     this.game.world.setBounds(0, 0, 1500, 600)
 
     this.loadLevel(this.LEVEL)
-    this.levelText = this.game.add.text(16, 80, 'Level 1' , { fontSize: '16px', fill: '#000' });
+    this.levelText = this.game.add.text(16, 80, 'Level 2' , { fontSize: '16px', fill: '#000' });
     this.levelText.fixedToCamera = true;
 
     //Collectibles
@@ -228,7 +242,7 @@ export default class extends Phaser.State {
     var shoot = game.input.keyboard.addKey(Phaser.Keyboard.A)
 
     if (shoot.justPressed()) {
-      this.shootBullet();
+        this.shootBullet();
     }
   }
 
@@ -405,13 +419,18 @@ export default class extends Phaser.State {
     this.spiders = this.game.add.group()
     this.spiders.enableBody = true
 
-    this.spider1 = this.spiders.create(121, 399, 'spider')
-    this.spider2 = this.spiders.create(800, 362, 'spider')
-    this.spider3 = this.spiders.create(500, 147, 'spider')
+    this.spider1 = this.spiders.create(1, 399, 'spider')
+    this.spider2 = this.spiders.create(640, 362, 'spider')
+    this.spider3 = this.spiders.create(450, 147, 'spider')
+    this.spider4 = this.spiders.create(150, 230, 'spider')
+    this.spider5 = this.spiders.create(1440, 410, 'spider')
+    this.spider6 = this.spiders.create(1460, 210, 'spider')
 
     this.spider1.body.velocity.x = 100
     this.spider2.body.velocity.x = 100
     this.spider3.body.velocity.x = 100
+    this.spider4.body.velocity.x = 100
+    this.spider5.body.velocity.x = 100
 
     this.spider1.animations.add('spider1',[0,1,2], 12, true)
     this.spider1.animations.play('spider1')
@@ -422,15 +441,28 @@ export default class extends Phaser.State {
     this.spider3.animations.add('spider3',[0,1,2], 12, true)
     this.spider3.animations.play('spider3')
 
+    this.spider4.animations.add('spider4',[0,1,2], 12, true)
+    this.spider4.animations.play('spider4')
+
+    this.spider5.animations.add('spider5',[0,1,2], 12, true)
+    this.spider5.animations.play('spider5')
+
+    this.spider6.animations.add('spider6',[0,1,2], 12, true)
+    this.spider6.animations.play('spider6')
+
   }
 
   enemyMove () {
-    if (parseInt(this.spider1.body.x) > 280 ) { this.spider1.body.velocity.x = -100 }
+    if (parseInt(this.spider1.body.x) > 120 ) { this.spider1.body.velocity.x = -100 }
     if (parseInt(this.spider1.body.x) < 1 ) { this.spider1.body.velocity.x = 100 }
-    if (parseInt(this.spider2.body.x) > 960 ) { this.spider2.body.velocity.x = -100 }
+    if (parseInt(this.spider2.body.x) > 790 ) { this.spider2.body.velocity.x = -100 }
     if (parseInt(this.spider2.body.x) < 668 ) { this.spider2.body.velocity.x = 100 }
-    if (parseInt(this.spider3.body.x) > 675) { this.spider3.body.velocity.x = -100 }
-    if (parseInt(this.spider3.body.x) < 475 ) { this.spider3.body.velocity.x = 100 }
+    if (parseInt(this.spider3.body.x) > 535) { this.spider3.body.velocity.x = -100 }
+    if (parseInt(this.spider3.body.x) < 460 ) { this.spider3.body.velocity.x = 100 }
+    if (parseInt(this.spider4.body.x) > 250) { this.spider4.body.velocity.x = -100 }
+    if (parseInt(this.spider4.body.x) < 127 ) { this.spider4.body.velocity.x = 100 }
+    if (parseInt(this.spider5.body.x) > 1460) { this.spider5.body.velocity.x = -100 }
+    if (parseInt(this.spider5.body.x) < 1420 ) { this.spider5.body.velocity.x = 100 }
   }
 
   dead() {
@@ -532,12 +564,13 @@ export default class extends Phaser.State {
     if (this.hasKey === true) {
       this.doorSound.play()
       this.backgroundSound.stop()
-      game.state.start('Game2')
+      game.state.start('Win')
     }
   }
 
 
   render () {
+    game.debug.spriteInfo(this.player, 32, 32);
     // if (__DEV__) {
     //   this.game.debug.spriteInfo(this.mushroom, 32, 32)
     // }
