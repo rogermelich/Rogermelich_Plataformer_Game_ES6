@@ -8,6 +8,9 @@ export default class extends Phaser.State {
   }
 
   create() {
+    this.backgroundSound = this.game.add.audio('backgroundMusic')
+    this.backgroundSound.loop = true
+    this.backgroundSound.stop()
     this.game.add.image(0, 0, 'background')
     this.stateTitleText = game.add.text(200, 50, ' ', { fontSize: '110px', fill: 'red' })
     this.stateTitleText.text = "Game Over"
