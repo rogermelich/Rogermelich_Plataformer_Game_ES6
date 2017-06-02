@@ -13,6 +13,7 @@ export default class extends Phaser.State {
 
   create () {
     this.backgroundSound = this.game.add.audio('backgroundMusic')
+    this.backgroundSound.loop = true
     this.game.add.image(0, 0, 'background')
     this.stateTitleText = game.add.text(50, 50, ' ', { fontSize: '70px', fill: '#fff' })
     this.stateTitleText.text = "Created By Roger Melich"
@@ -25,6 +26,9 @@ export default class extends Phaser.State {
 
     this.stateText = game.add.text(16, 470, ' ', { fontSize: '15px', fill: '#fff' })
     this.stateText.text = "Press 'R' To Resume Music"
+
+    this.stateText = game.add.text(16, 490, ' ', { fontSize: '15px', fill: '#fff' })
+    this.stateText.text = "Press 'A' To Shoot Bullets"
 
     this.backgroundSound.play()
 
@@ -47,6 +51,6 @@ export default class extends Phaser.State {
 
   startGame () {
     this.state.start('Game')
-    // this.backgroundSound.stop()
+    this.backgroundSound.stop()
   }
 }
